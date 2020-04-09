@@ -29,7 +29,7 @@ app.use("/api/post", postroutes);
 
 //serve static assets in production
 if (process.env.NODE_ENV === "production") {
-  //set stattic folder
+  //set static folder
   app.use(express.static("client/build"));
 
   app.get("*", (req, res) => {
