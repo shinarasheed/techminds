@@ -1,4 +1,6 @@
 {
-  "mongoURI": "mongodb+srv://rasheedopeyemi:opeyemi22@@cluster0-9m6fq.mongodb.net/test?retryWrites=true&w=majority"
-  // "mongoURI": "mongodb://localhost:27017/devconnector_2"
+  "mongoURI": "mongodb://localhost:27017/techminds",
+  "JWT_SECRET": "mysecret",
+  "GITHUB_CLIENTID": "247ff252acd874722bf1",
+  "GITHUB_CLIENTSECRET": "aeb772670c3bd1cd47568ece047ed4ca8924df2c"
 }

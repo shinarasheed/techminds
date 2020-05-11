@@ -1,14 +1,7 @@
-import React from "react";
+import React from 'react';
 
-const NotFound = () => {
-  return (
-    <>
-      <h1 className="x-large text-primary">
-        <i className="fas fa-exclamation-triangle"></i> Page Not Found!
-      </h1>
-      <p className="large">Sorry, This page does not exist</p>
-    </>
-  );
+const Notfound = () => {
+  return <div>this is the 404 page</div>;
 };
 
-export default NotFound;
+export default Notfound;

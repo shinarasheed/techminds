@@ -1,136 +1,141 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const ProfileSchema = new mongoose.Schema({
-  //every profile must be associated with a user
-  //ie every profile must have a user
-  //so we need to create a reference to the UsersCollection/Model
+const ProfileSchema = new Schema({
+  //every profile must belong to a user
   user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "user"
+    type: Schema.Types.ObjectId,
+    ref: 'techuser',
   },
 
   company: {
-    type: String
+    type: String,
   },
 
   website: {
-    type: String
+    type: String,
   },
+
   location: {
-    type: String
+    type: String,
   },
+
   status: {
     type: String,
-    required: true
+    required: true,
   },
+
   skills: {
-    //skills is an array of strings
     type: [String],
-    required: true
+    required: true,
   },
+
   bio: {
-    type: String
+    type: String,
   },
 
   githubusername: {
-    type: String
+    type: String,
   },
 
   experience: [
-    //experience is an array of experience objects
     {
       title: {
         type: String,
-        required: true
+        required: true,
       },
 
       company: {
         type: String,
-        required: true
+        required: true,
       },
+
       location: {
-        type: String
+        type: String,
       },
 
       from: {
-        // type: Date,
-        type: String,
-        required: true
+        type: Date,
+        required: true,
       },
+
       to: {
-        // type: Date
-        type: String
+        type: Date,
       },
 
       current: {
         type: Boolean,
-        default: false
+        default: false,
       },
+
       description: {
-        type: String
-      }
-    }
+        type: String,
+      },
+    },
   ],
+
   education: [
-    //education is an array of education
     {
       school: {
         type: String,
-        required: true
+        required: true,
       },
 
       degree: {
         type: String,
-        required: true
+        required: true,
       },
+
       fieldofstudy: {
         type: String,
-        required: true
+        required: true,
       },
+
       from: {
-        // type: Date,
-        type: String,
-        required: true
+        type: Date,
+        required: true,
       },
+
       to: {
-        // type: Date
-        type: String
+        type: Date,
       },
 
       current: {
         type: Boolean,
-        default: false
+        default: false,
       },
+
       description: {
-        type: String
-      }
-    }
+        type: String,
+      },
+    },
   ],
   social: {
-    //social is an object
-    youtube: {
-      type: String
-    },
-    twitter: {
-      type: String
-    },
     facebook: {
-      type: String
+      type: String,
+    },
+
+    youtube: {
+      type: String,
+    },
+
+    twitter: {
+      type: String,
     },
     linkedin: {
-      type: String
+      type: String,
     },
     instagram: {
-      type: String
-    }
+      type: String,
+    },
   },
 
   date: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-//create and export the collection/model
-const ProfileCollection = mongoose.model("profile", ProfileSchema);
-module.exports = ProfileCollection;
+const PostCollection = mongoose.model('profile', ProfileSchema);
+
+module.exports = PostCollection;

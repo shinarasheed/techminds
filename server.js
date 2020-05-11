@@ -1,43 +1,24 @@
-const express = require("express");
-const connectToDB = require("./config/db");
-const path = require("path");
-
-const dotenv = require("dotenv");
-
-const userroutes = require("./routes/api/user");
-const authroutes = require("./routes/api/auth");
-const postroutes = require("./routes/api/post");
-const profileroutes = require("./routes/api/profile");
-
-dotenv.config({ path: "./config.env" });
+const express = require('express');
+const connectToDB = require('./config/db');
+const user = require('./routes/api/user');
+const auth = require('./routes/api/auth');
+const post = require('./routes/api/post');
+const profile = require('./routes/api/profile');
 
 const app = express();
 
 connectToDB();
 
 //bodyparser middleware
-
 app.use(express.json({ extended: false }));
 
 //routes middleware
-app.use("/api/user", userroutes);
-app.use("/api/auth", authroutes);
-app.use("/api/profile", profileroutes);
-app.use("/api/post", postroutes);
+app.use('/api/user', user);
+app.use('/api/auth', auth);
+app.use('/api/post', post);
+app.use('/api/profile', profile);
 
-//this should always be done below the routes middleware
-
-//serve static assets in production
-if (process.env.NODE_ENV === "production") {
-  //set static folder
-  app.use(express.static("client/build"));
-
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
-  });
-}
-
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 4000;
 
 app.listen(port, () => {
   console.log(`app started on ${port}`);
