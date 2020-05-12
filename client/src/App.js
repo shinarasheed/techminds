@@ -23,6 +23,7 @@ const App = () => {
   //since we are not performing any event like button click etc
   //we can just do the below
   //why not just call loadUser instead of store.dispacth(loadUser())
+  //this feels good
   useEffect(() => {
     store.dispatch(loadUser());
   }, []);
