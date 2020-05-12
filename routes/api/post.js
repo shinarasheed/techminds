@@ -1,25 +1,17 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const PostCollection = require("../../models/Post");
-const ProfileCollection = require("../../models/Profile");
-const UserCollection = require("../../models/User");
-const { check, validationResult } = require("express-validator");
-const auth = require("../../middleware/auth");
+const auth = require('../../middleware/auth');
+const { check, validationResult } = require('express-validator');
+const UserCollection = require('../../models/User');
+const PostCollection = require('../../models/Post');
 
-//@route POST api/post
-//@desc Create a post
+//PSOT /api/post
+//@decs create post
 //@access private
 
 router.post(
-  "/",
-  [
-    auth,
-    [
-      check("text", "text is required")
-        .not()
-        .isEmpty()
-    ]
-  ],
+  '/',
+  [auth, [check('text', 'text is required').not().isEmpty()]],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -27,154 +19,157 @@ router.post(
     }
 
     try {
-      const user = await UserCollection.findById(req.user.id).select(
-        "-password"
-      );
+      //post has user,text, name, avatar. we would add the likes and comment through a seperate route
+      const { text } = req.body;
+      //create the post. but first get the details of the user making the post
+      const user = await UserCollection.findById(req.user).select('-password');
 
       const newPost = new PostCollection({
-        text: req.body.text,
+        text,
         name: user.name,
         avatar: user.avatar,
-        user: req.user.id
+        user: req.user,
       });
 
       const post = await newPost.save();
       res.status(200).json(post);
     } catch (err) {
-      console.error(err.message);
-      res.status(500).send("server error");
+      console.log(err.message);
+      res.status(500).send('server error');
     }
   }
 );
 
-//@route GET api/post
-//@desc GET all post
+//GET /api/post
+//@decs get all posts
 //@access private
 
-router.get("/", auth, async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const posts = await PostCollection.find().sort({ date: -1 });
     res.status(200).json(posts);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("server error");
+    res.status(500).send('server error');
   }
 });
 
-//@route GET api/post/:post_id
-//@desc GET a single post by id
+//GET /api/post/:postId
+//@decs get a single post
 //@access private
 
-router.get("/:post_id", auth, async (req, res) => {
+router.get('/:postId', auth, async (req, res) => {
   try {
-    const post = await PostCollection.findById(req.params.post_id);
-    //check if there is a post with that id
+    const post = await PostCollection.findById(req.params.postId);
     if (!post) {
-      return res.status(404).json({ msg: "post not found" });
+      return res.status(404).json({ msg: 'post not found' });
     }
+
     res.status(200).json(post);
   } catch (err) {
-    console.error(err.message);
-    if (err.kind === "ObjectId") {
-      res.status(404).json({ msg: "post not found" });
+    if (err.kind === 'ObjectId') {
+      return res.status(400).json({ msg: 'post not found' });
     }
-    res.status(500).send("server error");
+    console.error(err.message);
+    res.status(500).send('server error');
   }
 });
 
-//@route DELETE api/post/:post_id
-//@desc DELETE a single post by id
+//DELETE /api/post/:postId
+//@decs delete a post
+//@access private
+router.delete('/:postId', auth, async (req, res) => {
+  try {
+    //get the post to delete. but makesure it belongs to the user
+    const post = await PostCollection.findById(req.params.postId);
+    //is the req.user a string
+    if (post.user.toString() !== req.user) {
+      return res.status(401).json({ msg: 'you cannnot delete this post' });
+    }
+    //why not do this
+    // await PostCollection.findOneAndRemove(req.params.postId);
+    await post.remove(req.params.postId);
+    res.status(200).json({ msg: 'post deleted' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('server error');
+  }
+});
+
+//PUT api/post/like/:postId
+//@desc like a post
 //@access private
 
-router.delete("/:post_id", auth, async (req, res) => {
+router.put('/like/:postId', auth, async (req, res) => {
   try {
-    const post = await PostCollection.findById(req.params.post_id);
-    //check if the post belongs to the user
-
-    //this is not neccessary.
+    //get the post being liked
+    const post = await PostCollection.findById(req.params.postId);
     if (!post) {
-      return res.status(404).json({ msg: "post not found" });
-    }
-    if (post.user.toString() !== req.user.id) {
-      return res
-        .status(401)
-        .json({ msg: "you dont have permission to delete this post" });
+      return res.status(404).json({ msg: 'post not found' });
     }
 
-    await post.remove();
-    res.status(200).json({ msg: "post removed" });
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === "ObjectId") {
-      res.status(404).json({ msg: "post not found" });
-    }
-    res.status(500).send("server error");
-  }
-});
+    //post cannot be liked more than once by a user
 
-//@route PUT api/post/like/:id
-//@desc Like a post
-//@access private
-
-router.put("/like/:id", auth, async (req, res) => {
-  try {
-    const post = await PostCollection.findById(req.params.id);
-    //check if the post has already been liked by this user
-    if (
-      post.likes.filter(like => like.user.toString() === req.user.id).length > 0
-    ) {
-      return res.status(400).json({ msg: "post already liked" });
+    const likeLength = post.likes.filter(
+      (like) => like.user.toString() === req.user
+    ).length;
+    if (likeLength > 0) {
+      return res.status(400).json({ msg: 'post already liked by you' });
     }
-    post.likes.unshift({ user: req.user.id });
+    //likes is an array. and every like object has a user property
+    post.likes.unshift({ user: req.user });
     await post.save();
     res.status(200).json(post.likes);
   } catch (err) {
+    if (err.kind === 'ObjectId') {
+      return res.status(400).json({ msg: 'post not found' });
+    }
     console.error(err.message);
-    res.status(500).send("server error");
+    res.status(500).send('server error');
   }
 });
 
-//@route PUT api/post/like/:id
-//@desc Unlike a post
+//PUT api/post/unlike/:postId
+//@desc unlike a post
 //@access private
 
-router.put("/unlike/:id", auth, async (req, res) => {
+router.put('/unlike/:postId', auth, async (req, res) => {
   try {
-    const post = await PostCollection.findById(req.params.id);
-    //check if the post has already been liked by this user
-    if (
-      post.likes.filter(like => like.user.toString() === req.user.id).length ===
-      0
-    ) {
-      return res.status(400).json({ msg: "post has not been liked" });
+    //get the post to be unliked
+    const post = await PostCollection.findById(req.params.postId);
+    if (!post) {
+      return res.status(404).json({ msg: 'post not found' });
     }
-    //get the removed index
-    const removedIndex = post.likes
-      .map(like => like.user.toString())
-      .indexOf(req.user.id);
-    post.likes.splice(removedIndex, 1);
+
+    //SHINA. PLEASE FILTER RETURNS AN ARRAY. LET THAT SINK INTO YOUR HEAD
+    const user = post.likes.filter((like) => like.user.toString() === req.user);
+    if (user.length === 0) {
+      return res.status(401).json({ msg: 'you cannot unlike this post' });
+    }
+    //find the like to be removed
+    const likeToRemove = post.likes.find(
+      (like) => like.user.toString() === req.user
+    );
+    //find the index of likeToRemove
+    const indexOfLikeToRemove = post.likes.indexOf(likeToRemove);
+    post.likes.splice(indexOfLikeToRemove, 1);
     await post.save();
     res.status(200).json(post.likes);
   } catch (err) {
+    if (err.kind === 'ObjectId') {
+      return res.status(400).json({ msg: 'post not found' });
+    }
     console.error(err.message);
-    res.status(500).send("server error");
+    res.status(500).send('server error');
   }
 });
 
-//@route POST api/post/comment/:post_id
-//@desc add a comment to a post
+//PUT api/post/comment/:postId
+//@desc add comment to a post
 //@access private
-
-router.post(
-  "/comment/:post_id",
-  [
-    auth,
-    [
-      check("text", "text is required")
-        .not()
-        .isEmpty()
-    ]
-  ],
+router.put(
+  '/comment/:postId',
+  [auth, [check('text', 'text is required').not().isEmpty()]],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -182,75 +177,72 @@ router.post(
     }
 
     try {
-      //get th user
-      const user = await UserCollection.findById(req.user.id).select(
-        "-password"
-      );
-      //get the post we want to add a comment to
-      const post = await PostCollection.findById(req.params.post_id);
+      //post has user,text, name, avatar. we would add the likes and comment through a seperate route
+      const { text } = req.body;
+      //create the post. but first get the details of the user making the post
+      const user = await UserCollection.findById(req.user).select('-password');
 
-      //create the new comment
-      //the comment is not a document so we are not instanstiating a new post comment
+      //create the comment
       const newComment = {
-        text: req.body.text,
+        text,
         name: user.name,
         avatar: user.avatar,
-        user: req.user.id
+        user: req.user,
       };
 
-      //add the comment to the post comments array
+      //get the post
+      const post = await PostCollection.findById(req.params.postId);
+      if (!post) {
+        return res.status(404).json({ msg: 'post not found' });
+      }
       post.comments.unshift(newComment);
       await post.save();
       res.status(200).json(post.comments);
     } catch (err) {
-      console.error(err.message);
-      res.status(500).send("server error");
+      if (err.kind === 'ObjectId') {
+        return res.status(400).json({ msg: 'post not found' });
+      }
+      console.log(err.message);
+      res.status(500).send('server error');
     }
   }
 );
 
-//@route POST api/post/comment/:post_id/:comment_id
-//we need to know which post we are deleting a comment from
-//@desc delete a comment to a post
+//PUT api/post/comment/:postId/:commentId
+//@desc delete a comment from a post
 //@access private
 
-router.delete("/comment/:post_id/:comment_id", auth, async (req, res) => {
+router.delete('/comment/:postId/:commentId', auth, async (req, res) => {
   try {
-    //get post by id
-    const post = await PostCollection.findById(req.params.post_id);
+    //get the post to delete from
+    const post = await PostCollection.findById(req.params.postId);
+    if (!post) {
+      return res.status(404).json({ msg: 'post not found' });
+    }
 
-    //pull out comment
-
-    const comment = post.comments.find(
-      comment => comment.id === req.params.comment_id
+    //check if the user made the comment
+    const user = post.comments.filter(
+      (comment) => comment.user.toString() === req.user
     );
-    //make sure comment exist
-    if (!comment) {
-      return res.status(404).json({ msg: "comment does not exist" });
+    if (user.length === 0) {
+      return res.status(401).json({ msg: 'you cannot delete this comment' });
     }
-
-    //make sure the user deleting comment is the person that made the comment
-    if (comment.user.toString() !== req.user.id) {
-      return res.status(401).json({ msg: "user not authorized" });
-    }
-
-    //get removed index
-    const removeIndex = post.comments
-      .map(comment => comment.user.toString())
-      .indexOf(req.user.id);
-
-    if (!post.comments.splice(removeIndex, 1)) {
-      return res.status(500).json({ msg: "comment was not deleted" });
-    }
-
-    res.status(200).json({ msg: "comment deleted" });
+    //find the comment to be deleted
+    const commentToDelete = post.comments.find(
+      (comment) => comment.id === req.params.commentId
+    );
+    //find the index of commentToDelete
+    const indexOfCommentToDelete = post.comments.indexOf(commentToDelete);
+    post.comments.splice(indexOfCommentToDelete, 1);
+    await post.save();
+    res.status(200).json(post.comments);
   } catch (err) {
+    if (err.kind === 'ObjectId') {
+      return res.status(400).json({ msg: 'post not found' });
+    }
     console.error(err.message);
-    res.status(500).send("server error");
+    res.status(500).send('server error');
   }
 });
-
-//this last route
-//the comment dont appear to be deleted
 
 module.exports = router;

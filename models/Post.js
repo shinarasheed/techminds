@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const PostSchema = new Schema({
@@ -6,59 +6,59 @@ const PostSchema = new Schema({
   //we make a reference to the user model
   user: {
     type: Schema.Types.ObjectId,
-    ref: "user"
+    ref: 'techuser',
   },
 
   text: {
     type: String,
-    required: true
+    required: true,
   },
 
   name: {
     //this is the name of the user
-    type: String
+    type: String,
   },
   avatar: {
-    type: String
+    type: String,
   },
   likes: [
     {
       user: {
         type: Schema.Types.ObjectId,
-        ref: "user"
-      }
-    }
+        ref: 'techuser',
+      },
+    },
   ],
 
   comments: [
     {
       user: {
         type: Schema.Types.ObjectId,
-        ref: "user"
+        ref: 'techuser',
       },
 
       text: {
         type: String,
-        required: true
+        required: true,
       },
 
       name: {
         //this is the name of the user
-        type: String
+        type: String,
       },
       avatar: {
-        type: String
+        type: String,
       },
       date: {
         type: Date,
-        default: Date.now
-      }
-    }
+        default: Date.now,
+      },
+    },
   ],
   date: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-module.exports = PostCollection = mongoose.model("post", PostSchema);
+module.exports = PostCollection = mongoose.model('post', PostSchema);

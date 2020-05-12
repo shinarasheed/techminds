@@ -1,29 +1,31 @@
-import React from "react";
-import { Route, Redirect } from "react-router-dom";
-import PropTypes from "prop-types";
-import { connect } from "react-redux";
+import React from 'react';
+import { connect } from 'react-redux';
+import { Redirect, Route } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
-const Privateroute = ({
-  component: Component,
-  auth: { isAuthenticated, loading },
-  ...rest
-}) => (
+// {...rest}.we are using the rest operator. we are passing in the other props like exact path
+const Privateroute = (
+  { component: Component, auth: { isAuthenticated, loading } },
+  { ...rest }
+) => (
   <Route
     {...rest}
-    render={props =>
+    render={(props) =>
       !isAuthenticated && !loading ? (
-        <Redirect to="/login" />
+        <Redirect to='/login' />
       ) : (
         <Component {...props} />
       )
     }
-  />
+  ></Route>
 );
+
 Privateroute.propTypes = {
-  auth: PropTypes.object.isRequired
+  auth: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = state => ({
-  auth: state.auth
+const mapStateToProps = (state) => ({
+  auth: state.auth,
 });
+
 export default connect(mapStateToProps)(Privateroute);

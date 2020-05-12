@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
-import { Link, Redirect } from 'react-router-dom';
-import { connect } from 'react-redux';
-import { setAlert } from '../../actions/alert';
-import { registerUser } from '../../actions/auth';
-import PropTypes from 'prop-types';
+import axios from 'axios';
 
-//to use store.dispatch we would need to bring in the store
-// import store from '../../store';
-
-const Register = ({ setAlert, registerUser, auth: { isAuthenticated } }) => {
+const Signup = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,31 +17,42 @@ const Register = ({ setAlert, registerUser, auth: { isAuthenticated } }) => {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (password !== password2) {
-      setAlert('passwords do not match', 'danger');
+      console.log('passwords do not match');
     } else {
-      //i just discovered we could have done this instead
-      //because that's what we are doing in the App component
-      // store.dispatch(registerUser({ name, email, password }));
-      registerUser({ name, email, password });
+      const newUser = {
+        name,
+        email,
+        password,
+      };
+
+      try {
+        const config = {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        };
+
+        const body = JSON.stringify(newUser);
+        const res = await axios.post('/api/user/', body, config);
+        console.log(res.data);
+      } catch (err) {
+        console.log(err.response.data);
+      }
     }
   };
-
-  //if the user is authenticated redirect to the dashboard
-  if (isAuthenticated) {
-    return <Redirect to='/dashboard' />;
-  }
   return (
     <>
       <h1 className='large text-primary'>Sign Up</h1>
       <p className='lead'>
         <i className='fas fa-user'></i> Create Your Account
       </p>
-      <form className='form' onSubmit={(e) => onSubmit(e)}>
+      <form className='form' onSubmit={onSubmit}>
         <div className='form-group'>
           <input
             type='text'
             placeholder='Name'
             name='name'
+            required
             value={name}
             onChange={(e) => onChange(e)}
           />
@@ -60,6 +64,7 @@ const Register = ({ setAlert, registerUser, auth: { isAuthenticated } }) => {
             name='email'
             value={email}
             onChange={(e) => onChange(e)}
+            required
           />
           <small className='form-text'>
             This site uses Gravatar so if you want a profile image, use a
@@ -74,6 +79,7 @@ const Register = ({ setAlert, registerUser, auth: { isAuthenticated } }) => {
             minLength='6'
             value={password}
             onChange={(e) => onChange(e)}
+            required
           />
         </div>
         <div className='form-group'>
@@ -81,26 +87,19 @@ const Register = ({ setAlert, registerUser, auth: { isAuthenticated } }) => {
             type='password'
             placeholder='Confirm Password'
             name='password2'
+            minLength='6'
             value={password2}
             onChange={(e) => onChange(e)}
+            required
           />
         </div>
         <input type='submit' className='btn btn-primary' value='Register' />
       </form>
       <p className='my-1'>
-        Already have an account? <Link to='/login'>Sign In</Link>
+        Already have an account? <a href='login.html'>Sign In</a>
       </p>
     </>
   );
 };
 
-Register.propTypes = {
-  setAlert: PropTypes.func.isRequired,
-  registerUser: PropTypes.func.isRequired,
-};
-
-const mapStateToProps = (state) => ({
-  auth: state.auth,
-});
-
-export default connect(mapStateToProps, { setAlert, registerUser })(Register);
+export default Signup;
