@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { Redirect, Route } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
-// {...rest}.we are using the rest operator. we are passing in the other props like exact path
+// {...rest}.we are using the rest operator. we are passing in the other props like exact path.  this is simple as it is
 const Privateroute = (
   { component: Component, auth: { isAuthenticated, loading } },
   { ...rest }
