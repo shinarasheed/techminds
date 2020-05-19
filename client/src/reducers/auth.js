@@ -5,6 +5,7 @@ import {
   LOGIN_SUCCESS,
   LOGIN_FAIL,
   AUTH_ERROR,
+  LOGOUT,
 } from '../actions/types';
 const initialState = {
   //will it be right to initially set the token to null?
@@ -37,6 +38,9 @@ export default function (state = initialState, action) {
     case REGISTER_FAIL:
     case LOGIN_FAIL:
     case AUTH_ERROR:
+    case LOGOUT:
+      //this will logout out the user due to our logic in the Navbar
+      //if isAuthenticated, show this links, otherwise show these links
       localStorage.removeItem('token');
       return {
         ...state,
